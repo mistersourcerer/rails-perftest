@@ -49,9 +49,16 @@ module ActiveSupport
 
           klasses.each do |klass|
             fname = output_filename(klass)
-            FileUtils.mkdir_p(File.dirname(fname))
+            printer = klass.new(@data)
+            options = full_profile_options.slice(:min_percent)
+            path = File.dirname(fname)
+            FileUtils.mkdir_p(path)
             File.open(fname, 'wb') do |file|
-              klass.new(@data).print(file, full_profile_options.slice(:min_percent))
+              if printer.is_a?(RubyProf::CallTreePrinter) && RubyProf::VERSION >= "0.16.0"
+                printer.print(options.merge(:path => path))
+              else
+                printer.print(file, options)
+              end
             end
           end
         end
